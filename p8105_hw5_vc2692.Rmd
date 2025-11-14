@@ -70,7 +70,11 @@ bday_sim_results =
 bday_sim_results |> 
   ggplot(aes(x = group_size, y = prob_repeat)) +
   geom_point() +
-  geom_line()
+  geom_line() +
+  labs(
+    x = "Size of group",
+    y = "Probability of at least 2 people sharing birthday"
+  )
 ```
 
 In the above plot, we see that as the group_size for number of birthdays in a room increases, the probability of having at least two people sharing a birthday also increases. The graph follows a slight s curve. There is an at least 50% probability that at least two people in a room share a birthday at a group size of about 23. 
