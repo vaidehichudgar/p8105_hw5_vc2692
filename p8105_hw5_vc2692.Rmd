@@ -1,6 +1,8 @@
 ---
-title: "p8105_hw5_vc2692"
+title: "p8105_hw3_vc2692"
 output: github_document
+author: Vaidehi Chudgar
+date: "2025-11-14"
 ---
 
 ```{r}
@@ -30,10 +32,9 @@ scale_fill_discrete = scale_fill_viridis_d
 
 ## Question 1
 
-birthday problem 
+Birthday Problem
 
-putting above into a function
-
+First I create my function.
 ```{r}
 bday_sim = function(n_room) {
   
@@ -46,7 +47,7 @@ bday_sim = function(n_room) {
 
 ```
 
-want to repeat the function above multiple times
+Next, I run this function 10,000 times for each group size between 2 and 50. I compute the probability that at least two people in the gruop will share a birthday and plot this against group size. 
 
 ```{r}
 bday_sim_results = 
@@ -72,14 +73,14 @@ bday_sim_results |>
   geom_line()
 ```
 
-In the above plot, we see that as the group_size for number of birthdays in a room increases, the probability of having at least two people sharing a birthday also increases. The graph follows a slight s curve. There is an at least 50% probability that at leat two people in a room share a birthday at a group size of about 23. 
+In the above plot, we see that as the group_size for number of birthdays in a room increases, the probability of having at least two people sharing a birthday also increases. The graph follows a slight s curve. There is an at least 50% probability that at least two people in a room share a birthday at a group size of about 23. 
 
 
 
 ## Question 2
 
 
-creating function and simulation dataframe for mu = 0
+Creating function and saving mu hat and p value from the t test. 
 
 ```{r}
 sim_mean = function(mu, n_subj = 30, sigma = 5) {
@@ -102,23 +103,18 @@ sim_mean = function(mu, n_subj = 30, sigma = 5) {
 
 ```
 
-applying the function to get simulated data, with the repeats for mu = 0-6
+Applying the function to 5000 iterations for different my values.
 
 ```{r}
 sim_results_df = 
   expand_grid (
     mu = 0:6,
-    iter = 1:500
+    iter = 1:5000
     )|> 
   mutate(
     results = map(mu, sim_mean)
   ) |> 
-  unnest(results)
-```
-
-```{r}
-sim_results_df = 
-  sim_results_df |>
+  unnest(results) |> 
   group_by(
     mu
   ) |> 
@@ -128,16 +124,27 @@ sim_results_df =
   )
 ```
 
-plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. Describe the association between effect size and power.
+
+Below is a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. 
  
 ```{r}
 sim_results_df |> 
   ggplot(aes(x = mu, y = prop_reject)) +
-  geom_point()
+  geom_point() + 
+  geom_line() +
+  scale_x_continuous(breaks = unique(sim_results_df$mu))+
+  labs(
+    title = "Proportion of times null hypothesis rejected for each mu value",
+    x = "Mu",
+    y = "Proportion of times null hypothesis rejected"
+  )
 
 ```
 
-Make a plot showing the average estimate of μ^ on the y axis and the true value of μ on the x axis. 
+The above plot shows us that it is very difficult to accurately reject the null hypothesis correctly when mu is low because the effect size is small. When the effect size is small there is low power. However, as mu increase out effect size increases, the effect size gets larger because most mean estimates are much farther from 0 since they are coming from target populations of 3, 4, 5, 6. For t tests where mu is these larger values, we have more power because it is easier to detect a difference from the null of mu = 0. 
+
+
+Below, I make a plot showing the average estimate of μ^ on the y axis and the true value of μ on the x axis. 
 
 ```{r}
 sim_results_df |> 
@@ -147,11 +154,13 @@ sim_results_df |>
   ggplot(aes(x = mu, y = avg_mu_hat)) +
   geom_point() +
   geom_line() +
-  labs(title = "Avg of all mu hat estimates against true mu" ) 
+  labs(title = "Average of all mean estimates against true mean",
+       x = "Mu",
+       y = "Average mean estimate") 
 ```
 
 
-Make a second plot (or overlay on the first) the average estimate of μ^ only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. 
+Here is a plot of the average estimate of mu hat only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. 
 
 ```{r}
 sim_results_df |> 
@@ -164,16 +173,18 @@ sim_results_df |>
   ggplot(aes(x = mu, y = avg_mu_hat)) +
   geom_point() +
   geom_line() +
-  labs(title = "Avg of statistically significant mu hat estimates against true mu" )
+  labs(title = "Average of statistically significant mean estimates against true mean",
+       x = "Mu",
+       y = "Average mean estimates where null hypothesis rejected")
 ```
 
 
-Is the sample average of μ^ across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
+The sample average of mu hat only for tests where the null is rejected shows us the avg of sample means that are significantly different from the mu of the target population it was sampled from. For the lower mu values, the sample means that are rejected are greater than their true target mu which allows us to ascertain that the sample mu is different from the target mu. However, as the mu of the target population increases, the sample average of mu hats where the null is rejected gets closer to the mu of the target population, demonstrating that we are able to accurately reject those given increased effect size which leads to increased power.
 
-The sample average of mu hat only for tests where the null is rejected shows us the avg of sample means that significantly different from the mu of the target population it was sampled from. For the lower mu values, the sample means that are rejected are greater than their true target mu which allows us to ascertain that the sample mu is different from the target mu. However, as the mu of the target population increases, the sample average of mu hats where the null is rejected gets closer to the mu of the target population, demonstrating that we are able to accurately reject those given increased effect size which leads to increased power.
 
 ## Question 3
 
+Below I read in the homicides dataset. 
 ```{r}
 homicide_df =
   read_csv("data/homicide-data.csv", 
@@ -181,7 +192,8 @@ homicide_df =
 
 ```
 
-The raw data includes information on the homocide victim, such as the victom's name, race, age, sex. It also includes the geographic location (longitude and latitude) of the homicide, and the outcome of the case.
+The raw data includes information on the homicide victim, such as the victim's name, race, age, sex. It also includes the geographic location (longitude and latitude) of the homicide, and the outcome of the case.There are 52179 individuals included and 12 variables included. 
+
 
 ```{r}
  
@@ -197,8 +209,10 @@ The raw data includes information on the homocide victim, such as the victom's n
   ) |> 
   kable()
 ```
+The above table shows the total number of homicides and number of unsolved homicides for each city. 
  
  
+**Prop.test for Baltimore, MD** 
 ```{r}
 baltimore_df =
   homicide_df |> 
@@ -228,8 +242,8 @@ baltimore_prop_test =
   )
 ```
 
-prop test for all
 
+**Prop.test for all cities in dataset**
 ```{r}
 
 run_prop_test = function(unsolved, total) {
@@ -263,7 +277,7 @@ prop_test_df =
 
 ```
 
-graph
+Below, I create a plot that shows the estimates and CIs for each city. 
 
 ```{r}
 prop_test_df |> 
@@ -277,7 +291,7 @@ prop_test_df |>
     xmax = ci_upper_limit
   )) +
   labs(
-    title = "Proportion homocides unsolved by city",
+    title = "Proportion of homocides unsolved by city",
     x = "Proportion unsolved (with 95% CI)",
     y = "City"
   )
